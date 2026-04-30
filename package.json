@@ -1,0 +1,16 @@
+{
+  "name": "mini-jarvis",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "dev": "pnpm --filter @mini-jarvis/web dev",
+    "dev:https": "pnpm --filter @mini-jarvis/web dev:https",
+    "build": "pnpm --filter @mini-jarvis/web build",
+    "start": "pnpm --filter @mini-jarvis/web start",
+    "lint": "pnpm --filter @mini-jarvis/web lint",
+    "mobile": "pnpm --filter @mini-jarvis/native start",
+    "mobile:ios": "pnpm --filter @mini-jarvis/native ios",
+    "mobile:android": "pnpm --filter @mini-jarvis/native android",
+    "mobile:web": "pnpm --filter @mini-jarvis/native web"
+  }
+}

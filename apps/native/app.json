@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Mini Jarvis",
+    "slug": "mini-jarvis",
+    "scheme": "minijarvis",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ua.berrynora.minijarvis"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "ua.berrynora.minijarvis"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
