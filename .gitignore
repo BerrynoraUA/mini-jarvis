@@ -436,3 +436,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Mini Jarvis local storage (notes/tasks)
+/.data/
