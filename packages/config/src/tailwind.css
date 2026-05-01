@@ -1,0 +1,50 @@
+/*
+ * Mini Jarvis design tokens — Tailwind v4 (@theme inline)
+ * Imported by apps/web/src/app/globals.css.
+ *
+ * Token values mirror packages/config/src/tokens.ts.
+ */
+
+@theme inline {
+  /* Palette */
+  --color-canvas: #FAF7F2;
+  --color-surface: #F2EEE7;
+  --color-ink: #1B1F2A;
+  --color-terracotta: #D4986A;
+  --color-sage: #8FA68E;
+  --color-sky: #B5C7DC;
+  --color-hairline: #E5DFD4;
+  --color-muted-fg: #6B6A66;
+
+  /* Semantic — drives shadcn/ui */
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-ink);
+  --color-card: #FFFFFF;
+  --color-card-foreground: var(--color-ink);
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-ink);
+  --color-primary-foreground: var(--color-canvas);
+  --color-secondary: var(--color-surface);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-surface);
+  --color-muted-foreground: var(--color-muted-fg);
+  --color-accent: var(--color-terracotta);
+  --color-accent-foreground: var(--color-canvas);
+  --color-destructive: #B23A3A;
+  --color-destructive-foreground: var(--color-canvas);
+  --color-border: var(--color-hairline);
+  --color-input: var(--color-hairline);
+  --color-ring: var(--color-ink);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* Type */
+  --font-display: var(--font-instrument-serif);
+  --font-sans: var(--font-inter);
+}

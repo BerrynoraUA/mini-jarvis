@@ -20,8 +20,15 @@ import {
   LibraryPreview,
   SearchPreview,
 } from "@/components/marketing/phone-previews";
+import {
+  getNextOnboardingHref,
+  getNextOnboardingLabel,
+} from "@/lib/onboarding";
+import { getOnboardingSession } from "@/lib/onboarding.server";
 
-export default function MarketingHome() {
+export default async function MarketingHome() {
+  const session = await getOnboardingSession();
+
   return (
     <>
       <MarketingHeader />
@@ -43,8 +50,8 @@ export default function MarketingHome() {
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Button asChild>
-                <Link href="/app">
-                  Open the app <ArrowUpRight />
+                <Link href={getNextOnboardingHref(session)}>
+                  {getNextOnboardingLabel(session)} <ArrowUpRight />
                 </Link>
               </Button>
               <Button variant="outline">Watch the film</Button>

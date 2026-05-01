@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { TaskUpdateSchema } from "@mini-jarvis/schemas";
-import { getStorage } from "@mini-jarvis/storage/server";
+import { getRequestStorage, OnboardingRequiredError } from "@/lib/server-storage";
 
 export const runtime = "nodejs";
 
@@ -13,9 +13,12 @@ export async function PATCH(request: Request, { params }: Ctx) {
   const { id } = await params;
   try {
     const body = TaskUpdateSchema.parse(await request.json());
-    const task = await getStorage().tasks.update(id, body);
+    const task = await (await getRequestStorage()).tasks.update(id, body);
     return NextResponse.json({ task });
   } catch (err) {
+    if (err instanceof OnboardingRequiredError) {
+      return NextResponse.json({ error: err.message }, { status: 401 });
+    }
     if (err instanceof ZodError) {
       return NextResponse.json({ error: err.flatten() }, { status: 400 });
     }
@@ -24,7 +27,14 @@ export async function PATCH(request: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-  const { id } = await params;
-  await getStorage().tasks.remove(id);
-  return NextResponse.json({ ok: true });
+  try {
+    const { id } = await params;
+    await (await getRequestStorage()).tasks.remove(id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    if (err instanceof OnboardingRequiredError) {
+      return NextResponse.json({ error: err.message }, { status: 401 });
+    }
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

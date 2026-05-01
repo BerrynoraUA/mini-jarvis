@@ -26,6 +26,7 @@ import {
 } from "@mini-jarvis/ui";
 import { useQuery } from "@tanstack/react-query";
 import { notesApi, tasksApi } from "@/lib/api";
+import { getStorageOption, type ReadyOnboardingSession } from "@/lib/onboarding";
 
 const NAV = [
   { href: "/app", label: "Home", icon: Home },
@@ -34,8 +35,16 @@ const NAV = [
   { href: "/app/library", label: "Library", icon: Library },
 ];
 
-export function AppSidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
+export function AppSidebar({
+  onOpenPalette,
+  session,
+}: {
+  onOpenPalette: () => void;
+  session: ReadyOnboardingSession;
+}) {
   const pathname = usePathname();
+  const storage = getStorageOption(session.storageChoice);
+
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-hairline bg-canvas px-4 py-6 lg:flex">
       <Link href="/app" className="flex items-center gap-2 px-2">
@@ -75,10 +84,10 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         })}
       </nav>
       <div className="mt-auto rounded-2xl border border-hairline bg-surface/60 p-4 text-xs text-muted-foreground">
-        <p className="font-medium text-ink">Local workspace</p>
+        <p className="font-medium text-ink">{storage.label}</p>
         <p className="mt-1">
-          Notes &amp; tasks live in <code className="font-mono text-[11px]">./.data</code>. Drive
-          sync arrives soon.
+          {session.plan === "free" ? "Free" : "Paid"} plan for {session.name}. Data is scoped to
+          your {storage.label.toLowerCase()} workspace.
         </p>
       </div>
     </aside>
@@ -162,7 +171,13 @@ export function CommandPalette({
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session: ReadyOnboardingSession;
+}) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -178,7 +193,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-canvas">
-      <AppSidebar onOpenPalette={() => setPaletteOpen(true)} />
+      <AppSidebar
+        onOpenPalette={() => setPaletteOpen(true)}
+        session={session}
+      />
       <main className="flex-1 px-6 py-8 sm:px-10 lg:px-14">{children}</main>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
