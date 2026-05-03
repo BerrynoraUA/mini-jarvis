@@ -9,17 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Telegram\Handlers\KeyboardHandlers\**" />
-    <Content Remove="Telegram\Handlers\KeyboardHandlers\**" />
-    <EmbeddedResource Remove="Telegram\Handlers\KeyboardHandlers\**" />
-    <None Remove="Telegram\Handlers\KeyboardHandlers\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Google.Apis.Auth" Version="1.74.0" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.73.0.4112" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Telegram.Bot" Version="22.9.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Telegram\Handlers\KeyboardHandlers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tasks.Apllication\Tasks.Application.csproj" />
+    <ProjectReference Include="..\Tasks.Domain\Tasks.Domain.csproj" />
   </ItemGroup>
 </Project>

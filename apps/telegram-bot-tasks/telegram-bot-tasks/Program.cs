@@ -24,8 +24,6 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddScoped<ITelegramSender, TelegramSender>();
         services.AddScoped<IKeyboardFactory, KeyboardFactory>();
         services.AddScoped<IHandler, StartHandler>();
-        services.AddScoped<IHandler, AuthHandler>();
-        services.AddScoped<IHandler, TestHandler>();
         services.AddScoped<IHandler, SettingsMessageHandler>();
         services.AddScoped<IProccessorService, ProccessorService>();
         services.AddHostedService<TelegramPollingWorker>();
