@@ -1,53 +1,46 @@
-import { NextResponse } from "next/server";
-import { ZodError, z } from "zod";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { TaskInputSchema } from "@mini-jarvis/schemas";
-import { getRequestStorage, OnboardingRequiredError } from "@/lib/server-storage";
 
-export const runtime = "nodejs";
+import { getRequestStorage } from "@/lib/server-storage";
+import { createSupabaseRouteContext, jsonApiError } from "@/lib/route-handler";
 
 const ReorderSchema = z.object({ ids: z.array(z.string().uuid()) });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const tasks = await (await getRequestStorage()).tasks.list();
-    return NextResponse.json({ tasks });
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const tasks = await storage.tasks.list();
+    return applyCookies(NextResponse.json({ tasks }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const body = TaskInputSchema.parse(await request.json());
-    const task = await (await getRequestStorage()).tasks.create(body);
-    return NextResponse.json({ task }, { status: 201 });
+    const body = TaskInputSchema.parse(await req.json());
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const task = await storage.tasks.create(body);
+    return applyCookies(NextResponse.json({ task }, { status: 201 }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    if (err instanceof ZodError) {
-      return NextResponse.json({ error: err.flatten() }, { status: 400 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
 
-/** PATCH /api/tasks { ids: [...] } — bulk reorder */
-export async function PATCH(request: Request) {
+export async function PATCH(req: NextRequest) {
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const { ids } = ReorderSchema.parse(await request.json());
-    await (await getRequestStorage()).tasks.reorder(ids);
-    return NextResponse.json({ ok: true });
+    const { ids } = ReorderSchema.parse(await req.json());
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    await storage.tasks.reorder(ids);
+    return applyCookies(NextResponse.json({ ok: true }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    if (err instanceof ZodError) {
-      return NextResponse.json({ error: err.flatten() }, { status: 400 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }

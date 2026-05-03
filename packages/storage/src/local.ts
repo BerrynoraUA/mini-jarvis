@@ -45,6 +45,18 @@ async function pathExists(p: string) {
   }
 }
 
+function toNoteFrontmatter(note: Note) {
+  return NoteFrontmatterSchema.parse({
+    id: note.id,
+    title: note.title,
+    tags: note.tags,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+    ...(note.pinned !== undefined ? { pinned: note.pinned } : {}),
+    ...(note.archived !== undefined ? { archived: note.archived } : {}),
+  });
+}
+
 /* ----- adapters ----- */
 
 class LocalNotesStore implements NotesStore {
@@ -124,15 +136,7 @@ class LocalNotesStore implements NotesStore {
   }
 
   private async write(note: Note) {
-    const fm = NoteFrontmatterSchema.parse({
-      id: note.id,
-      title: note.title,
-      tags: note.tags,
-      createdAt: note.createdAt,
-      updatedAt: note.updatedAt,
-      pinned: note.pinned,
-      archived: note.archived,
-    });
+    const fm = toNoteFrontmatter(note);
     const file = this.file(note.slug);
     const out = matter.stringify(note.body ?? "", fm);
     await fs.writeFile(file, out, "utf8");

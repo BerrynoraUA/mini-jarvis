@@ -1,40 +1,45 @@
-import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { NextRequest, NextResponse } from "next/server";
 import { TaskUpdateSchema } from "@mini-jarvis/schemas";
-import { getRequestStorage, OnboardingRequiredError } from "@/lib/server-storage";
 
-export const runtime = "nodejs";
+import { getRequestStorage } from "@/lib/server-storage";
+import { createSupabaseRouteContext, jsonApiError } from "@/lib/route-handler";
 
-interface Ctx {
-  params: Promise<{ id: string }>;
+function getId(req: NextRequest) {
+  const id = req.nextUrl.pathname.split("/").pop() ?? "";
+  return decodeURIComponent(id).trim();
 }
 
-export async function PATCH(request: Request, { params }: Ctx) {
-  const { id } = await params;
+export async function PATCH(req: NextRequest) {
+  const id = getId(req);
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const body = TaskUpdateSchema.parse(await request.json());
-    const task = await (await getRequestStorage()).tasks.update(id, body);
-    return NextResponse.json({ task });
+    const body = TaskUpdateSchema.parse(await req.json());
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const task = await storage.tasks.update(id, body);
+    return applyCookies(NextResponse.json({ task }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    if (err instanceof ZodError) {
-      return NextResponse.json({ error: err.flatten() }, { status: 400 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(req: NextRequest) {
+  const id = getId(req);
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const { id } = await params;
-    await (await getRequestStorage()).tasks.remove(id);
-    return NextResponse.json({ ok: true });
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    await storage.tasks.remove(id);
+    return applyCookies(NextResponse.json({ ok: true }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
