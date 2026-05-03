@@ -1,56 +1,65 @@
-import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { NextRequest, NextResponse } from "next/server";
 import { NoteInputSchema } from "@mini-jarvis/schemas";
-import { getRequestStorage, OnboardingRequiredError } from "@/lib/server-storage";
 
-export const runtime = "nodejs";
+import { getRequestStorage } from "@/lib/server-storage";
+import { createSupabaseRouteContext, jsonApiError } from "@/lib/route-handler";
 
-interface Ctx {
-  params: Promise<{ slug: string }>;
+function getSlug(req: NextRequest) {
+  const slug = req.nextUrl.pathname.split("/").pop() ?? "";
+  return decodeURIComponent(slug).trim();
 }
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(req: NextRequest) {
+  const slug = getSlug(req);
+  if (!slug) {
+    return NextResponse.json({ error: "Missing slug" }, { status: 400 });
+  }
+
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const { slug } = await params;
-    const note = await (await getRequestStorage()).notes.get(slug);
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const note = await storage.notes.get(slug);
     if (!note) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+      return applyCookies(NextResponse.json({ error: "not found" }, { status: 404 }));
     }
-    return NextResponse.json({ note });
+    return applyCookies(NextResponse.json({ note }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
 
-export async function PUT(request: Request, { params }: Ctx) {
-  const { slug } = await params;
+export async function PUT(req: NextRequest) {
+  const slug = getSlug(req);
+  if (!slug) {
+    return NextResponse.json({ error: "Missing slug" }, { status: 400 });
+  }
+
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const body = NoteInputSchema.partial().parse(await request.json());
-    const note = await (await getRequestStorage()).notes.update(slug, body);
-    return NextResponse.json({ note });
+    const body = NoteInputSchema.partial().parse(await req.json());
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const note = await storage.notes.update(slug, body);
+    return applyCookies(NextResponse.json({ note }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    if (err instanceof ZodError) {
-      return NextResponse.json({ error: err.flatten() }, { status: 400 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(req: NextRequest) {
+  const slug = getSlug(req);
+  if (!slug) {
+    return NextResponse.json({ error: "Missing slug" }, { status: 400 });
+  }
+
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const { slug } = await params;
-    await (await getRequestStorage()).notes.remove(slug);
-    return NextResponse.json({ ok: true });
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    await storage.notes.remove(slug);
+    return applyCookies(NextResponse.json({ ok: true }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }

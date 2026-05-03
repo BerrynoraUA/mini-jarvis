@@ -18,6 +18,18 @@ The HTTPS script uses local certificate files in `certificates/`, which are inte
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Environment
+
+Create [apps/web/.env.local.example](/Users/valeriiinshyn/Dev/Projects/Personal/mini-jarvis/apps/web/.env.local.example) as [apps/web/.env.local](/Users/valeriiinshyn/Dev/Projects/Personal/mini-jarvis/apps/web/.env.local) and provide:
+
+- `NEXT_PUBLIC_SUPABASE_URL`: your Supabase project URL.
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`: your Supabase publishable key.
+- `SUPABASE_SERVICE_ROLE_KEY`: your Supabase service role key. Keep it server-only.
+- `GOOGLE_CLIENT_ID`: your Google OAuth Web application client ID.
+- `GOOGLE_CLIENT_SECRET`: the matching Google OAuth client secret.
+
+In Supabase Auth, enable the Google provider and configure it with the same Google client ID and secret. Add your local app URL to the Supabase redirect allow list, and in Google Cloud Console add the callback URL shown by Supabase for the Google provider. The app requests Google profile/email access plus Drive file access so Mini Jarvis can create and update its own files in your Drive.
+
 You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

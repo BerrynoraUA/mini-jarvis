@@ -1,34 +1,30 @@
-import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { NextRequest, NextResponse } from "next/server";
 import { NoteInputSchema } from "@mini-jarvis/schemas";
-import { getRequestStorage, OnboardingRequiredError } from "@/lib/server-storage";
 
-export const runtime = "nodejs";
+import { getRequestStorage } from "@/lib/server-storage";
+import { createSupabaseRouteContext, jsonApiError } from "@/lib/route-handler";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const notes = await (await getRequestStorage()).notes.list();
-    return NextResponse.json({ notes });
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const notes = await storage.notes.list();
+    return applyCookies(NextResponse.json({ notes }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
+  const { supabaseReq, supabaseRes, applyCookies } = createSupabaseRouteContext(req);
+
   try {
-    const body = NoteInputSchema.parse(await request.json());
-    const note = await (await getRequestStorage()).notes.create(body);
-    return NextResponse.json({ note }, { status: 201 });
+    const body = NoteInputSchema.parse(await req.json());
+    const storage = await getRequestStorage(supabaseReq, supabaseRes);
+    const note = await storage.notes.create(body);
+    return applyCookies(NextResponse.json({ note }, { status: 201 }));
   } catch (err) {
-    if (err instanceof OnboardingRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
-    }
-    if (err instanceof ZodError) {
-      return NextResponse.json({ error: err.flatten() }, { status: 400 });
-    }
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return applyCookies(jsonApiError(err));
   }
 }
