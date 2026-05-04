@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace telegram_bot_tasks.Services
+namespace telegram_bot_tasks.Models
 {
     public class AccessTokenCredential : IConfigurableHttpClientInitializer
     {

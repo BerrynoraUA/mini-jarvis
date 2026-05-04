@@ -7,6 +7,7 @@ using Tasks.Application.Interfaces;
 using Tasks.Domain.Enums;
 using Tasks.Domain.Models;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using telegram_bot_tasks.Telegram.Handlers.Interfaces;
 using telegram_bot_tasks.Telegram.Keyboards;
 using telegram_bot_tasks.Telegram.Models;
@@ -38,12 +39,20 @@ namespace telegram_bot_tasks.Telegram.Handlers.CommandHandlers
 
             var backendUrl = _configuration["BackendUrl"];
 
-            var loginUrl = $"{backendUrl.TrimEnd('/')}/auth/login-google?telegramId={telegramUserId}";
+            var loginUrl = $"{backendUrl}/auth/login-google?telegramId={telegramUserId}";
 
             await _sender.SendTextAsync(new SendTextRequest
             {
                 ChatId = chatId,
-                Text = $"Підключи Google акаунт:\n{loginUrl}",
+                Text = $"""
+                        <b>🔐 Підключення Google акаунта</b>
+
+                        Натисни на посилання нижче, щоб авторизуватись:
+
+                        👉 <a href="{loginUrl}">Увійти через Google</a>
+                        {loginUrl}
+                        Після авторизації повернись у Telegram.
+                        """
             }, cancellationToken);
         }
     }

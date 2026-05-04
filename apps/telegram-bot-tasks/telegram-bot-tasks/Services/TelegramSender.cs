@@ -7,6 +7,7 @@ using Tasks.Application.Interfaces;
 using Tasks.Domain.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Tasks.Application.Services
 {
@@ -25,6 +26,7 @@ namespace Tasks.Application.Services
                 chatId: request.ChatId,
                 text: request.Text,
                 replyMarkup: request.ReplyMarkup,
+                parseMode: ParseMode.Html,
                 cancellationToken: cancellationToken);
         }
 

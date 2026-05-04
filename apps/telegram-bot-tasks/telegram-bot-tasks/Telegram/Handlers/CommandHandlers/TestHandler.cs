@@ -13,7 +13,8 @@ using Tasks.Application.Interfaces;
 using Tasks.Domain.Enums;
 using Tasks.Domain.Models;
 using Telegram.Bot.Types;
-using telegram_bot_tasks.Services;
+using telegram_bot_tasks.Interfaces;
+using telegram_bot_tasks.Models;
 using telegram_bot_tasks.Telegram.Handlers.Interfaces;
 using telegram_bot_tasks.Telegram.Models;
 
@@ -23,16 +24,14 @@ namespace telegram_bot_tasks.Telegram.Handlers.CommandHandlers
     {
         private TelegramRoute telegramRoute;
         private readonly ITelegramSender _sender;
-        IConfiguration _configuration;
-        HttpClient _httpClient;
-        public TestHandler(ITelegramSender sender, IConfiguration configuration)
+        private readonly IGoogleDriveProvider _googleDriveProvider;
+        public TestHandler(ITelegramSender sender, IGoogleDriveProvider googleDriveProvider)
         {
             telegramRoute = new TelegramRoute(TelegramRouteType.Command, "/test");
             _sender = sender;
-            _configuration = configuration;
-            _httpClient = new HttpClient();
+            _googleDriveProvider = googleDriveProvider;
         }
-
+          
         public bool CanHandle(TelegramRoute telegramRoute)
         {
             return this.telegramRoute == telegramRoute;
@@ -40,38 +39,10 @@ namespace telegram_bot_tasks.Telegram.Handlers.CommandHandlers
 
         public async Task HandleAsync(TelegramRoute telegramRoute, Update update, CancellationToken cancellationToken)
         {
-            var chatId = update.Message!.Chat.Id;
-            var telegramUserId = update.Message.From.Id;
+            var chatId = update.Message.Chat.Id;
+            var telegramId = update.Message.From.Id;
 
-            var backendUrl = _configuration["BackendUrl"];
-
-            var response = await _httpClient.GetAsync(
-             $"{backendUrl}/auth/google-token/{telegramUserId}",
-                cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                await _sender.SendTextAsync(new SendTextRequest
-                {
-                    ChatId = chatId,
-                    Text = $"Спочатку зроби /connect",
-                }, cancellationToken);
-                return;
-            }
-
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            var data = JsonSerializer.Deserialize<GoogleTokenResponse>(content);
-
-            var accessToken = data!.accessToken;
-
-            var initializer = new BaseClientService.Initializer
-            {
-                HttpClientInitializer = new AccessTokenCredential(accessToken),
-                ApplicationName = "Tasks.Bot"
-            };
-
-            var driveService = new DriveService(initializer);
+            var driveService = await _googleDriveProvider.GetGoogleDriveClient(telegramId, chatId, cancellationToken);
 
             var request = driveService.Files.List();
             request.PageSize = 10;

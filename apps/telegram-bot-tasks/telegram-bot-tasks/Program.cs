@@ -3,6 +3,8 @@ using Tasks.Application.Services;
 using Tasks.Domain.Models;
 using Telegram.Bot;
 using telegram_bot_tasks;
+using telegram_bot_tasks.Interfaces;
+using telegram_bot_tasks.Services;
 using telegram_bot_tasks.Telegram.Handlers.CommandHandlers;
 using telegram_bot_tasks.Telegram.Handlers.Interfaces;
 using telegram_bot_tasks.Telegram.Handlers.MessageHandlers;
@@ -12,7 +14,7 @@ using telegram_bot_tasks.Telegram.Polling.Interfaces;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<TelegramPollingWorker>();
-
+builder.Services.AddHttpClient();
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
@@ -23,6 +25,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<ITelegramPollingRunner, TelegramPollingRunner>();
         services.AddScoped<ITelegramSender, TelegramSender>();
         services.AddScoped<IKeyboardFactory, KeyboardFactory>();
+        services.AddScoped<IGoogleDriveProvider, GoogleDriveProvider>();
         services.AddScoped<IHandler, StartHandler>();
         services.AddScoped<IHandler, AuthHandler>();
         services.AddScoped<IHandler, TestHandler>();
