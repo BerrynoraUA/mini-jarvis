@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@mini-jarvis/config/tailwind.css";
+@import "@mdxeditor/editor/style.css";
 
 /* Tell Tailwind to scan workspace UI package sources for class usage. */
 @source "../../packages/ui/src/**/*.{ts,tsx}";
@@ -13,4 +14,127 @@ body {
 
 .font-display {
   font-family: var(--font-display), "Cambria", "Times New Roman", serif;
+}
+
+.mj-note-editor {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mj-note-editor .mdxeditor-toolbar {
+  display: none;
+}
+
+.mj-note-editor .mdxeditor-root-contenteditable,
+.mj-note-editor .mj-note-editor__content {
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.mj-note-editor .mj-note-editor__content h1,
+.mj-note-editor .mj-note-editor__content h2,
+.mj-note-editor .mj-note-editor__content h3,
+.mj-note-editor .mj-note-editor__content h4 {
+  font-family: var(--font-display), "Cambria", "Times New Roman", serif;
+  color: var(--color-foreground);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.mj-note-editor .mj-note-editor__content h1 {
+  font-size: 2.5rem;
+}
+
+.mj-note-editor .mj-note-editor__content h2 {
+  font-size: 2rem;
+}
+
+.mj-note-editor .mj-note-editor__content h3 {
+  font-size: 1.5rem;
+}
+
+.mj-note-editor .mj-note-editor__content h4 {
+  font-size: 1.25rem;
+}
+
+.mj-note-editor .mj-note-editor__content h1:first-child,
+.mj-note-editor .mj-note-editor__content h2:first-child,
+.mj-note-editor .mj-note-editor__content h3:first-child,
+.mj-note-editor .mj-note-editor__content h4:first-child,
+.mj-note-editor .mj-note-editor__content p:first-child,
+.mj-note-editor .mj-note-editor__content ul:first-child,
+.mj-note-editor .mj-note-editor__content ol:first-child,
+.mj-note-editor .mj-note-editor__content blockquote:first-child {
+  margin-top: 0;
+}
+
+.mj-note-editor .mj-note-editor__content p,
+.mj-note-editor .mj-note-editor__content li,
+.mj-note-editor .mj-note-editor__content blockquote,
+.mj-note-editor .mj-note-editor__content td,
+.mj-note-editor .mj-note-editor__content th {
+  color: var(--color-foreground);
+}
+
+.mj-note-editor .mj-note-editor__content p,
+.mj-note-editor .mj-note-editor__content ul,
+.mj-note-editor .mj-note-editor__content ol,
+.mj-note-editor .mj-note-editor__content blockquote,
+.mj-note-editor .mj-note-editor__content pre,
+.mj-note-editor .mj-note-editor__content table {
+  margin: 0.75rem 0;
+}
+
+.mj-note-editor .mj-note-editor__content ul,
+.mj-note-editor .mj-note-editor__content ol {
+  padding-left: 1.5rem;
+}
+
+.mj-note-editor .mj-note-editor__content ul {
+  list-style: disc;
+}
+
+.mj-note-editor .mj-note-editor__content ol {
+  list-style: decimal;
+}
+
+.mj-note-editor .mj-note-editor__content li > ul,
+.mj-note-editor .mj-note-editor__content li > ol {
+  margin: 0.35rem 0;
+}
+
+.mj-note-editor .mj-note-editor__content li::marker {
+  color: var(--color-foreground);
+}
+
+.mj-note-editor .mj-note-editor__content code {
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-surface) 85%, white 15%);
+  padding: 0.1rem 0.35rem;
+  font-family: var(--font-mono, "SFMono-Regular", Consolas, monospace);
+  font-size: 0.9em;
+}
+
+.mj-note-editor .mj-note-editor__content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.mj-note-editor .mj-note-editor__content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mj-note-editor .mj-note-editor__content th,
+.mj-note-editor .mj-note-editor__content td {
+  border: 1px solid color-mix(in srgb, var(--color-hairline) 80%, transparent 20%);
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+}
+
+.mj-note-editor .mj-note-editor__content blockquote {
+  border-left: 2px solid color-mix(in srgb, var(--color-terracotta) 50%, transparent 50%);
+  margin-left: 0;
+  padding-left: 1rem;
 }

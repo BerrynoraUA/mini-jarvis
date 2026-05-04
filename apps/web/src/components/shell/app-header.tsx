@@ -10,6 +10,14 @@ export function AppHeader({ user }: { user: { name: string; email: string } }) {
         </span>
         <span className="font-display text-lg italic text-ink">Mini Jarvis</span>
       </div>
+      <div className="absolute left-1/2 hidden -translate-x-1/2 text-center lg:block">
+        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          Workspace
+        </p>
+        <p className="mt-1 font-display text-2xl text-ink">
+          Notes &amp; Calendar <em className="italic text-terracotta">at peace.</em>
+        </p>
+      </div>
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="hidden text-right sm:block">
           <p className="font-medium text-ink">{user.name}</p>

@@ -22,10 +22,12 @@ const DRIVE_FILES_ENDPOINT = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD_ENDPOINT = "https://www.googleapis.com/upload/drive/v3/files";
 const FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
 const DEFAULT_ROOT_FOLDER = "Mini Jarvis";
+const APP_DATA_SPACE = "appDataFolder";
 
 export interface DriveStorageOptions {
   accessToken?: string;
   rootFolderName?: string;
+  refreshAccessToken?: () => Promise<string>;
 }
 
 interface DriveFile {
@@ -111,17 +113,47 @@ function formatGoogleDriveError(raw: string, fallbackStatus: string): string {
 }
 
 class DriveClient {
-  constructor(private readonly accessToken: string) {}
+  private currentAccessToken: string;
+  private refreshPromise: Promise<string> | null = null;
 
-  private async request(input: string, init?: RequestInit): Promise<Response> {
+  constructor(
+    accessToken: string,
+    private readonly refreshAccessToken?: () => Promise<string>,
+  ) {
+    this.currentAccessToken = accessToken;
+  }
+
+  private async refreshToken(): Promise<string> {
+    if (!this.refreshAccessToken) {
+      throw new Error("Google Drive access token expired and no refresh callback is configured");
+    }
+
+    this.refreshPromise ??= this.refreshAccessToken()
+      .then((token) => {
+        this.currentAccessToken = token;
+        return token;
+      })
+      .finally(() => {
+        this.refreshPromise = null;
+      });
+
+    return this.refreshPromise;
+  }
+
+  private async request(input: string, init?: RequestInit, allowRetry = true): Promise<Response> {
     const response = await fetch(input, {
       ...init,
       headers: {
-        authorization: `Bearer ${this.accessToken}`,
+        authorization: `Bearer ${this.currentAccessToken}`,
         ...(init?.headers ?? {}),
       },
       cache: "no-store",
     });
+
+    if (response.status === 401 && allowRetry && this.refreshAccessToken) {
+      await this.refreshToken();
+      return this.request(input, init, false);
+    }
 
     if (!response.ok) {
       const message = await response.text().catch(() => response.statusText);
@@ -133,11 +165,16 @@ class DriveClient {
     return response;
   }
 
-  async listFiles(query: string, fields = "files(id,name,mimeType,modifiedTime)"): Promise<DriveFile[]> {
+  async listFiles(
+    query: string,
+    fields = "files(id,name,mimeType,modifiedTime)",
+    spaces = "drive",
+  ): Promise<DriveFile[]> {
     const url = new URL(DRIVE_FILES_ENDPOINT);
     url.searchParams.set("q", query);
     url.searchParams.set("fields", fields);
     url.searchParams.set("pageSize", "200");
+    url.searchParams.set("spaces", spaces);
     url.searchParams.set("supportsAllDrives", "false");
     const response = await this.request(url.toString());
     const payload = (await response.json()) as { files?: DriveFile[] };
@@ -260,16 +297,19 @@ class DriveNotesStore implements NotesStore {
   ) {}
 
   private async listNoteFiles(): Promise<DriveFile[]> {
-    const folder = await this.workspace.getNotesFolder();
-    return this.client.listFiles(
-      `'${folder.id}' in parents and trashed = false and name contains '.md'`,
+    const files = await this.client.listFiles(
+      `trashed = false and name contains '.md'`,
+      "files(id,name,mimeType,modifiedTime)",
+      APP_DATA_SPACE,
     );
+    return files;
   }
 
   private async findBySlug(slug: string): Promise<DriveFile | null> {
-    const folder = await this.workspace.getNotesFolder();
     const files = await this.client.listFiles(
-      `'${folder.id}' in parents and trashed = false and name = '${escapeDriveQueryValue(`${slug}.md`)}'`,
+      `trashed = false and name = '${escapeDriveQueryValue(`${slug}.md`)}'`,
+      "files(id,name,mimeType,modifiedTime)",
+      APP_DATA_SPACE,
     );
     return files[0] ?? null;
   }
@@ -285,8 +325,7 @@ class DriveNotesStore implements NotesStore {
     };
   }
 
-  private async writeNote(note: Note, fileId?: string): Promise<void> {
-    const folder = await this.workspace.getNotesFolder();
+  private async writeNoteToAppData(note: Note, fileId?: string): Promise<void> {
     const content = matter.stringify(note.body ?? "", toNoteFrontmatter(note));
 
     if (fileId) {
@@ -297,7 +336,7 @@ class DriveNotesStore implements NotesStore {
     await this.client.createFile(
       {
         name: `${note.slug}.md`,
-        parents: [folder.id],
+        parents: [APP_DATA_SPACE],
       },
       content,
       "text/markdown; charset=utf-8",
@@ -344,7 +383,7 @@ class DriveNotesStore implements NotesStore {
       archived: data.archived,
     };
 
-    await this.writeNote(note);
+    await this.writeNoteToAppData(note);
     return note;
   }
 
@@ -364,7 +403,7 @@ class DriveNotesStore implements NotesStore {
       tags: input.tags ?? existing.tags,
       updatedAt: new Date().toISOString(),
     };
-    await this.writeNote(merged, file.id);
+    await this.writeNoteToAppData(merged, file.id);
     return merged;
   }
 
@@ -382,9 +421,10 @@ class DriveTasksStore implements TasksStore {
   ) {}
 
   private async getTasksFile(): Promise<DriveFile | null> {
-    const folder = await this.workspace.getTasksFolder();
     const files = await this.client.listFiles(
-      `'${folder.id}' in parents and trashed = false and name = 'tasks.json'`,
+      `trashed = false and name = 'tasks.json'`,
+      "files(id,name,mimeType,modifiedTime)",
+      APP_DATA_SPACE,
     );
     return files[0] ?? null;
   }
@@ -398,15 +438,15 @@ class DriveTasksStore implements TasksStore {
   }
 
   private async writeAll(tasks: Task[]): Promise<void> {
-    const folder = await this.workspace.getTasksFolder();
     const payload = JSON.stringify(tasks, null, 2);
     const file = await this.getTasksFile();
     if (file) {
       await this.client.updateFile(file.id, payload, "application/json; charset=utf-8");
       return;
     }
+
     await this.client.createFile(
-      { name: "tasks.json", parents: [folder.id] },
+      { name: "tasks.json", parents: [APP_DATA_SPACE] },
       payload,
       "application/json; charset=utf-8",
     );
@@ -479,7 +519,10 @@ class DriveTasksStore implements TasksStore {
 }
 
 export function createDriveStorage(options?: DriveStorageOptions): Storage {
-  const client = new DriveClient(ensureAccessToken(options?.accessToken));
+  const client = new DriveClient(
+    ensureAccessToken(options?.accessToken),
+    options?.refreshAccessToken,
+  );
   const workspace = new DriveWorkspace(client, options?.rootFolderName ?? DEFAULT_ROOT_FOLDER);
 
   return {

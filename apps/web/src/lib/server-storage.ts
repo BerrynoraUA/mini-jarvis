@@ -9,5 +9,9 @@ export async function getRequestStorage(
 ): Promise<Storage> {
   const session = await requireAuthSession(req, res);
   const accessToken = await getValidGoogleAccessToken(session);
-  return createDriveStorage({ accessToken, rootFolderName: "Mini Jarvis" });
+  return createDriveStorage({
+    accessToken,
+    rootFolderName: "Mini Jarvis",
+    refreshAccessToken: () => getValidGoogleAccessToken(session, { forceRefresh: true }),
+  });
 }

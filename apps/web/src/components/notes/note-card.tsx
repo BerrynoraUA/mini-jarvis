@@ -20,7 +20,7 @@ export function NoteCard({
       className={cn(
         "block w-full rounded-2xl border px-5 py-4 text-left transition",
         active
-          ? "border-ink bg-ink text-canvas"
+          ? "border-terracotta/55 bg-[#F1E7DB] text-ink shadow-[0_10px_30px_rgba(212,152,106,0.12)]"
           : "border-hairline bg-canvas hover:border-ink/20 hover:shadow-sm",
       )}
     >
@@ -29,7 +29,7 @@ export function NoteCard({
           <h3
             className={cn(
               "truncate font-display text-xl",
-              active ? "text-canvas" : "text-ink",
+              active ? "text-ink" : "text-ink",
             )}
           >
             {note.title || "Untitled"}
@@ -37,7 +37,7 @@ export function NoteCard({
           <p
             className={cn(
               "mt-1 line-clamp-2 text-sm",
-              active ? "text-canvas/80" : "text-muted-foreground",
+              active ? "text-ink/75" : "text-muted-foreground",
             )}
           >
             {note.body.replace(/[#>*`_\[\]]/g, "").slice(0, 160) || "Empty note"}
@@ -46,16 +46,25 @@ export function NoteCard({
         <span
           className={cn(
             "shrink-0 text-xs uppercase tracking-widest",
-            active ? "text-canvas/70" : "text-muted-foreground",
+            active ? "text-ink/55" : "text-muted-foreground",
           )}
         >
           {format(new Date(note.updatedAt), "MMM d")}
         </span>
       </div>
       {note.tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-2">
           {note.tags.map((t) => (
-            <Badge key={t} variant={active ? "accent" : "outline"}>
+            <Badge
+              key={t}
+              variant="outline"
+              className={cn(
+                "max-w-full shrink-0 rounded-full px-3 py-1 text-xs italic leading-none whitespace-nowrap",
+                active
+                  ? "border-terracotta/35 bg-canvas/55 text-ink/80"
+                  : "border-hairline/80 bg-transparent text-muted-foreground",
+              )}
+            >
               {t}
             </Badge>
           ))}

@@ -13,6 +13,7 @@ const GOOGLE_AUTH_SCOPE = [
   "email",
   "profile",
   "https://www.googleapis.com/auth/drive.file",
+  "https://www.googleapis.com/auth/drive.appdata",
 ].join(" ");
 
 export interface AuthSession {
@@ -228,8 +229,11 @@ export async function exchangeGoogleCodeForSession(input: {
   return authSession;
 }
 
-export async function getValidGoogleAccessToken(session: AuthSession): Promise<string> {
-  if (session.googleAccessToken) {
+export async function getValidGoogleAccessToken(
+  session: AuthSession,
+  options?: { forceRefresh?: boolean },
+): Promise<string> {
+  if (session.googleAccessToken && !options?.forceRefresh) {
     return session.googleAccessToken;
   }
 
@@ -252,6 +256,9 @@ export async function getValidGoogleAccessToken(session: AuthSession): Promise<s
     mj_google_scope: tokens.scope ?? session.scope,
   });
 
+  session.googleAccessToken = tokens.access_token;
+  session.googleRefreshToken = tokens.refresh_token ?? session.googleRefreshToken;
+  session.scope = tokens.scope ?? session.scope;
   return tokens.access_token;
 }
 
