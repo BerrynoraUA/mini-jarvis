@@ -66,9 +66,9 @@ export function Login({ error }: { error: string | null }) {
               </div>
             ) : null}
             <Button asChild className="w-full rounded-full" size="lg">
-              <a href="/api/auth/google">
+              <Link href="/api/auth/google">
                 Sign in with Google <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </Button>
             <p className="text-sm leading-relaxed text-muted-foreground">
               You will be asked to grant access to create and manage Mini Jarvis files in
