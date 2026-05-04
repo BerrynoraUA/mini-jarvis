@@ -1,11 +1,12 @@
 "use client";
 
 import type { Note } from "@mini-jarvis/schemas";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Save, Trash2, X } from "lucide-react";
+import { Check, Clock3, Plus, Save, Trash2, X } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
-import { Badge, Button, Input } from "@mini-jarvis/ui";
+import { Badge, Button, Input, cn } from "@mini-jarvis/ui";
 
 import { ApiError, notesApi } from "@/lib/api";
 import { MarkdownLiveEditor } from "./markdown-live-editor";
@@ -113,8 +114,20 @@ export function NoteEditor({
 
   const loaded = note.data.note;
   const isOptimistic = loaded.id.startsWith("optimistic-");
+  const currentTitle = title ?? loaded.title;
   const currentBody = body ?? loaded.body;
   const currentTags = tags ?? loaded.tags;
+  const isDirty =
+    currentTitle !== loaded.title ||
+    currentBody !== loaded.body ||
+    currentTags.join("\u0000") !== loaded.tags.join("\u0000");
+
+  const saveStateLabel = useMemo(() => {
+    if (save.isPending) return "Saving...";
+    if (isOptimistic) return "Creating...";
+    if (isDirty) return "Unsaved changes";
+    return "Saved";
+  }, [isDirty, isOptimistic, save.isPending]);
 
   function updateOptimisticDraft(patch: Partial<Note>) {
     if (!isOptimistic) return;
@@ -157,6 +170,7 @@ export function NoteEditor({
       setSaveWhenReady(true);
       return;
     }
+    if (save.isPending) return;
     save.mutate();
   }, [isOptimistic, save]);
 
@@ -180,7 +194,28 @@ export function NoteEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="-mb-1 flex items-center justify-end gap-2">
+      <div className="-mb-1 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 normal-case tracking-normal",
+              save.isPending
+                ? "bg-sky/20 text-ink"
+                : isDirty || isOptimistic
+                  ? "bg-terracotta/16 text-ink"
+                  : "bg-sage/18 text-ink",
+            )}
+          >
+            {save.isPending || isDirty || isOptimistic ? (
+              <Clock3 className="h-3.5 w-3.5" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
+            {saveStateLabel}
+          </span>
+          <span>Updated {format(new Date(loaded.updatedAt), "MMM d, HH:mm")}</span>
+        </div>
+
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -190,11 +225,16 @@ export function NoteEditor({
             }}
             disabled={isOptimistic || remove.isPending}
             aria-label="Delete note"
+            className="rounded-full"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-          <Button onClick={triggerSave} disabled={save.isPending}>
-            <Save className="mr-1 h-4 w-4" /> {save.isPending ? "Saving..." : "Save"}
+          <Button
+            onClick={triggerSave}
+            disabled={save.isPending || !isDirty}
+            className="rounded-full"
+          >
+            <Save className="mr-1 h-4 w-4" /> Save now
           </Button>
         </div>
       </div>
@@ -210,7 +250,7 @@ export function NoteEditor({
 
       <div className="rounded-[24px] border border-hairline bg-surface/35 px-4 py-3">
         <Input
-          value={title ?? loaded.title}
+          value={currentTitle}
           onChange={(e) => {
             setTitle(e.target.value);
             updateOptimisticDraft({ title: e.target.value });
@@ -256,7 +296,7 @@ export function NoteEditor({
                   }
                 }}
                 placeholder="New tag"
-                className="h-8 w-32 rounded-full border-hairline bg-canvas px-3 text-xs focus-visible:ring-1"
+                className="h-8 w-36 rounded-full border-hairline bg-canvas px-3 text-xs focus-visible:ring-1"
               />
             ) : (
               <button
@@ -276,7 +316,9 @@ export function NoteEditor({
         initialValue={currentBody}
         onChange={updateBody}
       />
-      <p className="text-xs text-muted-foreground">Ctrl/Cmd+S to save.</p>
+      <p className="text-xs text-muted-foreground">
+        Markdown shortcuts apply as you type. Ctrl/Cmd+S saves immediately.
+      </p>
     </div>
   );
 }

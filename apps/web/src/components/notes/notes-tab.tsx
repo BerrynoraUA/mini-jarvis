@@ -1,7 +1,7 @@
 "use client";
 
 import type { Note } from "@mini-jarvis/schemas";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -141,61 +141,75 @@ export function NotesTab() {
     );
   }, [notes.data, query]);
 
+  useEffect(() => {
+    if (selectedSlug || query.trim()) return;
+    const firstSlug = notes.data?.notes[0]?.slug;
+    if (!firstSlug) return;
+    setSelectedSlug(firstSlug);
+    setSelectedEditorKey(firstSlug);
+  }, [notes.data, query, selectedSlug]);
+
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(360px,480px)_minmax(0,1fr)]">
-      <section className="flex flex-col gap-4 xl:pr-2">
+      <section className="flex min-h-0 flex-col gap-4 xl:pr-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-ink">Your notes</h2>
-          {newTitle === null && (
-            <Button size="sm" onClick={startCreating}>
+          {newTitle === null ? (
+            <Button size="sm" onClick={startCreating} className="rounded-full">
               <Plus className="mr-1 h-4 w-4" /> New
             </Button>
-          )}
+          ) : null}
         </div>
 
         {newTitle !== null && (
           <form
-            className="flex items-center gap-2"
+            className="rounded-2xl border border-hairline bg-canvas/80 p-2"
             onSubmit={(e) => {
               e.preventDefault();
               submitCreate();
             }}
           >
-            <Input
-              ref={titleInputRef}
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Note title..."
-              disabled={create.isPending}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") cancelCreating();
-              }}
-              className="flex-1"
-            />
-            <Button type="submit" size="sm" disabled={create.isPending}>
-              {create.isPending ? "Creating..." : "Create"}
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={cancelCreating}
-              disabled={create.isPending}
-              aria-label="Cancel"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Input
+                ref={titleInputRef}
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Note title..."
+                disabled={create.isPending}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") cancelCreating();
+                }}
+                className="h-10 flex-1 rounded-xl border-transparent bg-transparent px-3 shadow-none focus-visible:border-hairline focus-visible:bg-canvas focus-visible:ring-0"
+              />
+              <Button type="submit" size="sm" disabled={create.isPending}>
+                {create.isPending ? "Creating..." : "Create"}
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={cancelCreating}
+                disabled={create.isPending}
+                aria-label="Cancel"
+                className="h-9 w-9 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </form>
         )}
 
         <NotesSearch value={query} onChange={setQuery} />
 
+        <div className="min-h-0 rounded-[28px] border border-hairline bg-surface/20 p-2">
           {notes.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="flex min-h-[18rem] items-center justify-center text-sm text-muted-foreground">
+              Loading...
+            </div>
           ) : filtered.length === 0 ? (
             <EmptyNotes onCreate={startCreating} />
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex max-h-[calc(100vh-18rem)] flex-col gap-2 overflow-y-auto pr-1">
               {filtered.map((n) => (
                 <li key={n.slug}>
                   <NoteCard
@@ -210,6 +224,7 @@ export function NotesTab() {
               ))}
             </ul>
           )}
+        </div>
       </section>
 
       <section className="rounded-3xl border border-hairline bg-surface/30 px-5 pb-3 pt-2 lg:px-7 lg:pb-4 lg:pt-2.5 2xl:px-8 2xl:pb-5 2xl:pt-3">
@@ -227,7 +242,7 @@ export function NotesTab() {
           <div className="flex h-full min-h-[60vh] flex-col items-center justify-center text-center">
             <p className="font-display text-3xl italic text-ink">Select a note</p>
             <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-              Pick something from the list, or start a new thought.
+              Pick something from the list, search for an old idea, or start a new thought.
             </p>
             <Button className="mt-6" onClick={startCreating}>
               <Plus className="mr-1 h-4 w-4" /> New note

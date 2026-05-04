@@ -1,7 +1,7 @@
 "use client";
 
 import type { Note } from "@mini-jarvis/schemas";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { Badge, cn } from "@mini-jarvis/ui";
 
 export function NoteCard({
@@ -18,29 +18,30 @@ export function NoteCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "block w-full rounded-2xl border px-5 py-4 text-left transition",
+        "block w-full rounded-[20px] border px-4 py-3 text-left transition",
         active
-          ? "border-terracotta/55 bg-[#F1E7DB] text-ink shadow-[0_10px_30px_rgba(212,152,106,0.12)]"
+          ? "border-terracotta/55 bg-[#F3E8DA] text-ink shadow-[0_10px_24px_rgba(212,152,106,0.14)]"
           : "border-hairline bg-canvas hover:border-ink/20 hover:shadow-sm",
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h3
-            className={cn(
-              "truncate font-display text-xl",
-              active ? "text-ink" : "text-ink",
-            )}
-          >
-            {note.title || "Untitled"}
-          </h3>
+          <h3 className="truncate font-display text-lg text-ink">{note.title || "Untitled"}</h3>
           <p
             className={cn(
-              "mt-1 line-clamp-2 text-sm",
+              "mt-1.5 line-clamp-2 text-sm",
               active ? "text-ink/75" : "text-muted-foreground",
             )}
           >
             {note.body.replace(/[#>*`_\[\]]/g, "").slice(0, 160) || "Empty note"}
+          </p>
+          <p
+            className={cn(
+              "mt-2 text-[11px] uppercase tracking-[0.18em]",
+              active ? "text-ink/45" : "text-muted-foreground/80",
+            )}
+          >
+            Edited {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
           </p>
         </div>
         <span
@@ -59,7 +60,7 @@ export function NoteCard({
               key={t}
               variant="outline"
               className={cn(
-                "max-w-full shrink-0 rounded-full px-3 py-1 text-xs italic leading-none whitespace-nowrap",
+                "rounded-full px-2.5 py-1 text-[11px] italic leading-none",
                 active
                   ? "border-terracotta/35 bg-canvas/55 text-ink/80"
                   : "border-hairline/80 bg-transparent text-muted-foreground",
